@@ -11,5 +11,5 @@ scikit-image==0.21.0
 scikit-learn==1.2.2
 scipy==1.11.0
 seaborn==0.12.2
-tensorflow==2.12.0
+tensorflow==2.14.0
 imageio~=2.31.5
