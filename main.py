@@ -3,32 +3,47 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imageio.v3 as iio
 import cv2
+import os
 # from keras.datasets import mnist
-
+import tensorflow as tf
 from skimage.filters import threshold_otsu
 from skimage import exposure
+to_create = {
+    'root': '/Data',
+    'train_dir': 'Data/train_set',
+    'test_dir': 'Data/test_set/',
+    'true_train_dir': 'Data/train_set/solar',
+    'false_train_dir': 'Data/train_set/non_solar',
+    'true_test_dir': 'Data/test_set/solar',
+    'false_test_dir': 'Data/test_set/non_solar',
 
+}
 
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-originalImage = cv2.imread('train_set/solar/AABCN78E1YHCWW.png')
-grayImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+kwargs = dict(
+    featurewise_center=False,
+    featurewise_std_normalization=False,
+    # rotation_range=90,
+    rescale=1. / 255,
+    # zca_whitening=True,
+    # horizontal_flip=True,
+    # vertical_flip=True,
+    # preprocessing_function=preprocessing
+)
 
-# Histogram equalization na prvním příkladu
-#equalized_image = exposure.equalize_hist(data)
+train_datagen = ImageDataGenerator(**kwargs)
 
-ada_thresh_gaussian = cv2.adaptiveThreshold(grayImage, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 7, 4)
-
-# Zobrazení před a po
-
-plt.subplot(1, 2, 2)
-plt.imshow(ada_thresh_gaussian, cmap='gray')
-plt.title("Equalized Image")
-plt.axis("off")
-
-plt.show()
-
-
-
-
-
-
+train_tfdata = train_datagen.flow_from_directory(directory=to_create.get('train_dir'),
+                                                 seed=24,
+                                                 color_mode='grayscale',
+                                                 batch_size=6, class_mode='binary'
+                                                 )
+test_datagen = ImageDataGenerator(rescale=1. / 255,
+                                  )
+test_tfdata = test_datagen.flow_from_directory(directory=to_create.get('test_dir'),
+                                               seed=24,color_mode='grayscale',
+                                                                        batch_size=2,class_mode='binary'
+                                                                        )
+history = train_datagen.fit(train_tfdata)
+print(history)
