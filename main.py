@@ -3,6 +3,7 @@ import os
 # from keras.datasets import mnist
 import numpy as np
 import tensorflow as tf
+from keras import backend as k
 from skimage.filters import threshold_otsu
 from skimage import exposure
 import cv2
@@ -56,16 +57,39 @@ model =  tf.keras.Sequential([
             tf.keras.layers.Dense(64, activation='relu'),
             tf.keras.layers.Dense(1, activation='sigmoid')])
 
+
+
+
+
+def recall_m(y_true, y_pred):
+    true_positives = k.sum(k.round(k.clip(y_true * y_pred, 0, 1)))
+    possible_positives = k.sum(k.round(k.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + k.epsilon())
+    return recall
+
+def precision_m(y_true, y_pred):
+    true_positives = k.sum(k.round(k.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = k.sum(k.round(k.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + k.epsilon())
+    return precision
+def f1_m(y_true, y_pred):
+    precision = precision_m(y_true, y_pred)
+    recall = recall_m(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+k.epsilon()))
+
 model.compile(optimizer='Adam',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
+              loss='binary_crossentropy',
+              metrics=[f1_m,precision_m])
 
 model.fit(x_train, y_train,
-          batch_size=128,
-          epochs=2,
-          verbose=1,
+          #batch_size=128,
+          epochs=10,
+          verbose=0,
           validation_data=(x_test, y_test))
+
+
 
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
-print('Test accuracy:', score[1])
+print('Test F1 score:', score[1])
+print('Test precision:', score[2])
