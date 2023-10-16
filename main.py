@@ -62,34 +62,20 @@ model =  tf.keras.Sequential([
 
 
 
-def recall_m(y_true, y_pred):
-    true_positives = k.sum(k.round(k.clip(y_true * y_pred, 0, 1)))
-    possible_positives = k.sum(k.round(k.clip(y_true, 0, 1)))
-    recall = true_positives / (possible_positives + k.epsilon())
-    return recall
 
-def precision_m(y_true, y_pred):
-    true_positives = k.sum(k.round(k.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = k.sum(k.round(k.clip(y_pred, 0, 1)))
-    precision = true_positives / (predicted_positives + k.epsilon())
-    return precision
-def f1_m(y_true, y_pred):
-    precision = precision_m(y_true, y_pred)
-    recall = recall_m(y_true, y_pred)
-    return 2*((precision*recall)/(precision+recall+k.epsilon()))
 
 model.compile(optimizer='Adam',
               loss='binary_crossentropy',
-              metrics=[f1_m,precision_m])
+              metrics=[tf.keras.metrics.Precision(), tf.keras.metrics.Recall()])
 
-model.fit(x_train, y_train,
+y_pred = model.fit(x_train, y_train,
           #batch_size=128,
           epochs=2,
           verbose=1,
           validation_data=(x_test, y_test))
 
 
-y_pred = model.predict(x_test, batch_size=64, verbose=1)
+
 y_pred_bool = np.argmax(y_pred, axis=1)
 
 print(classification_report(y_test, y_pred_bool))
