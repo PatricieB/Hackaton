@@ -7,6 +7,7 @@ from keras import backend as k
 from skimage.filters import threshold_otsu
 from skimage import exposure
 import cv2
+from sklearn.metrics import classification_report
 to_create = {
     'root': '/Data',
     'train_dir': 'Data/train_set',
@@ -83,13 +84,12 @@ model.compile(optimizer='Adam',
 
 model.fit(x_train, y_train,
           #batch_size=128,
-          epochs=10,
-          verbose=0,
+          epochs=2,
+          verbose=1,
           validation_data=(x_test, y_test))
 
 
+y_pred = model.predict(x_test, batch_size=64, verbose=1)
+y_pred_bool = np.argmax(y_pred, axis=1)
 
-score = model.evaluate(x_test, y_test, verbose=0)
-print('Test loss:', score[0])
-print('Test F1 score:', score[1])
-print('Test precision:', score[2])
+print(classification_report(y_test, y_pred_bool))
