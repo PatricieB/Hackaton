@@ -1,13 +1,11 @@
 # Importy knihoven
-import numpy as np
-import matplotlib.pyplot as plt
-import imageio.v3 as iio
-import cv2
 import os
 # from keras.datasets import mnist
+import numpy as np
 import tensorflow as tf
 from skimage.filters import threshold_otsu
 from skimage import exposure
+import cv2
 to_create = {
     'root': '/Data',
     'train_dir': 'Data/train_set',
@@ -19,31 +17,55 @@ to_create = {
 
 }
 
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-kwargs = dict(
-    featurewise_center=False,
-    featurewise_std_normalization=False,
-    # rotation_range=90,
-    rescale=1. / 255,
-    # zca_whitening=True,
-    # horizontal_flip=True,
-    # vertical_flip=True,
-    # preprocessing_function=preprocessing
-)
 
-train_datagen = ImageDataGenerator(**kwargs)
 
-train_tfdata = train_datagen.flow_from_directory(directory=to_create.get('train_dir'),
-                                                 seed=24,
-                                                 color_mode='grayscale',
-                                                 batch_size=6, class_mode='binary'
-                                                 )
-test_datagen = ImageDataGenerator(rescale=1. / 255,
-                                  )
-test_tfdata = test_datagen.flow_from_directory(directory=to_create.get('test_dir'),
-                                               seed=24,color_mode='grayscale',
-                                                                        batch_size=2,class_mode='binary'
-                                                                        )
-history = train_datagen.fit(train_tfdata)
-print(history)
+def data_load(root_path, scale=(256,256)):
+  categories =  os.listdir(root_path)
+  x = []
+  y =[]
+  for i, cat in enumerate(categories):
+    img_path = os.path.join(root_path, cat)
+    images = os.listdir(img_path)
+    for image in images:
+      img = cv2.imread(os.path.join(img_path, image), 0)
+      img = cv2.resize(img, scale)
+      x.append(img)
+      y.append(i)
+  return np.array(x), np.array(y)
+x_train, y_train = data_load(to_create.get('train_dir'))
+x_test, y_test = data_load(to_create.get('test_dir'))
+x_train = np.expand_dims(x_train, axis=3)
+x_test = np.expand_dims(x_test, axis=3)
+
+
+model =  tf.keras.Sequential([
+
+            tf.keras.layers.Conv2D(64, 3, strides=(1, 1),
+                                   activation='relu', padding='same',
+                                   input_shape=[256, 256, 1]),
+
+            tf.keras.layers.MaxPooling2D(pool_size=2),
+
+            tf.keras.layers.Conv2D(128, 3, strides=(1, 1),
+                                   activation='relu', padding='same',
+                                   ),
+            tf.keras.layers.MaxPooling2D(pool_size=2),
+
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(64, activation='relu'),
+            tf.keras.layers.Dense(1, activation='sigmoid')])
+
+model.compile(optimizer='Adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+model.fit(x_train, y_train,
+          batch_size=128,
+          epochs=2,
+          verbose=1,
+          validation_data=(x_test, y_test))
+
+score = model.evaluate(x_test, y_test, verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
