@@ -32,6 +32,7 @@ def data_load(root_path, scale=(256,256)):
     for image in images:
       img = cv2.imread(os.path.join(img_path, image), 0)
       img = cv2.resize(img, scale)
+
       x.append(img)
       y.append(i)
   return np.array(x), np.array(y)
@@ -68,7 +69,7 @@ model.compile(optimizer='Adam',
               loss='binary_crossentropy',
               metrics=[tf.keras.metrics.Precision(), tf.keras.metrics.Recall()])
 
-y_pred = model.fit(x_train, y_train,
+model.fit(x_train, y_train,
           #batch_size=128,
           epochs=2,
           verbose=1,
@@ -76,6 +77,8 @@ y_pred = model.fit(x_train, y_train,
 
 
 
-y_pred_bool = np.argmax(y_pred, axis=1)
+score = model.evaluate(x_test, y_test, verbose=1)
+f1score = 2 * (score[1] * score[2]) / (score[1] + score[2])
+print(score)
+print(f1score)
 
-print(classification_report(y_test, y_pred_bool))
