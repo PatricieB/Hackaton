@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
-img = cv.imread('train_set/solar/AABNG2261PNFOZ.png', cv.IMREAD_GRAYSCALE)
+img = cv.imread('train_set/solar/AABNG2261PNFOZ.png', )
 assert img is not None, "file could not be read, check with os.path.exists()"
 img2 = img.copy()
 template = cv.imread('train_set/solar/AABCN78E1YHCWW.png', cv.IMREAD_GRAYSCALE)
