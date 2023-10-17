@@ -75,6 +75,10 @@ model.fit(x_train, y_train,
 score = model.evaluate(x_test, y_test, verbose=1)
 
 # F1 Score
-f1score = 2 * (score[1] * score[2]) / (score[1] + score[2])
+if (score[1] + score[2]) != 0:
+    f1score = 2 * (score[1] * score[2]) / (score[1] + score[2])
+else:
+    0
+
 print(score)
 print(f1score)
